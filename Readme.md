@@ -39,11 +39,12 @@ You can host this instantly for your own private testing by enabling GitHub Page
 
 1. **Select an AI Provider:** Choose between Claude, Gemini, ChatGPT, or Azure OpenAI.
 2. **Provide your API Key:** Enter your secure API key (processed strictly client-side to communicate with the model endpoint).
-3. **Choose an Input Mode:**
-   * **URL:** Analyze via a public Rise share link or Review 360 URL (uses a public CORS proxy).
-   * **HTML:** Paste the raw inner HTML source of a course layout.
-   * **SCORM (.zip):** Drag and drop a standard exported SCORM package. The app uses `JSZip` to read the package entry point directly in-browser.
-   * **Demo:** Test the interface instantly using a built-in dummy module containing 7 pre-planted layout bugs.
+3. ### 3. Choose an Input Mode (Prototype Status):
+* **🧪 Demo Mode (Fully Functional):** Test the interface instantly using a built-in dummy module containing 7 pre-planted layout bugs. **Start here to see the tool work.**
+* **📦 SCORM (.zip) Upload (Functional / Testing):** Drag and drop a standard exported SCORM package. The app uses `JSZip` to unpack and scan the package entry point directly in-browser. 
+* **🎨 URL & HTML Modes (UI Prototypes Only):** 
+  * *URL Mode:* Intended to analyze via a public Rise share link or Review 360 URL. *Currently non-functional/placeholder due to public CORS proxy limitations.*
+  * *HTML Mode:* Intended to parse raw pasted inner HTML source. *Currently non-functional/experimental layout prototype.*
 4. **Run & Review:** Click **Run QA Analysis** to generate an interactive report categorized by Passes, Warnings, and Failures. You can export the final breakdown to a CSV spreadsheet.
 
 ---
