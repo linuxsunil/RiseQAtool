@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rise QA Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--hs:#D94F70;--hs-dk:#B83A58;--hs-lt:#E9728F;--hs-pale:#FDF0F3;--hs-dim:rgba(217,79,112,0.10);--bg:#fff;--sur:#fff;--sur2:#FDF0F3;--bor:#F0D0D8;--bor2:#E8B8C5;--txt:#2A1018;--txt2:#6B3344;--mut:#B07080;--grn:#2E8B5A;--gdim:rgba(46,139,90,0.10);--glt:#EAF5EF;--red:#C0202A;--rdim:rgba(192,32,42,0.10);--rlt:#FDECEA;--amb:#C47800;--adim:rgba(196,120,0,0.10);--alt:#FEF6E4;--mono:"IBM Plex Mono",monospace;--sans:"DM Sans",sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#F9EAEE;color:var(--txt);font-family:var(--sans);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.hdr{background:var(--hs);padding:0 24px;display:flex;align-items:center;gap:12px;flex-shrink:0;height:52px;box-shadow:0 2px 12px rgba(183,58,88,0.3);}
+.hlogo{width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;border:1px solid rgba(255,255,255,0.3);}
+.htxt h1{font-size:14px;font-weight:600;color:#fff;}.htxt p{font-size:10px;color:rgba(255,255,255,0.7);}
+.hbadge{font-size:10px;font-family:var(--mono);color:var(--hs);background:#fff;padding:3px 9px;border-radius:20px;font-weight:600;}
+.hreset{margin-left:auto;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:500;font-family:var(--sans);cursor:pointer;}
+.hreset:hover{background:rgba(255,255,255,0.25);}
+.app{display:flex;flex:1;overflow:hidden;}
+.left{width:292px;flex-shrink:0;background:var(--sur);border-right:1px solid var(--bor);display:flex;flex-direction:column;overflow-y:auto;}
+.right{flex:1;overflow-y:auto;background:#F9EAEE;display:flex;flex-direction:column;}
+.sec{padding:14px 16px;border-bottom:1px solid var(--bor);}
+.slbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--hs);font-family:var(--mono);font-weight:500;margin-bottom:10px;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.pcard{background:var(--bg);border:1.5px solid var(--bor);border-radius:10px;padding:10px 11px 9px;cursor:pointer;display:flex;flex-direction:column;gap:3px;font-family:var(--sans);text-align:left;width:100%;transition:all 0.15s;}
+.pcard:hover{border-color:var(--hs-lt);background:var(--hs-pale);}
+.pcard.sel{border-color:var(--hs);background:var(--hs-dim);box-shadow:0 0 0 3px rgba(217,79,112,0.12);}
+.plogo{font-size:18px;line-height:1;margin-bottom:2px;}.pname{font-size:12px;font-weight:600;color:var(--txt);}.psub{font-size:10px;color:var(--mut);font-family:var(--mono);}
+.pcard.sel .psub{color:var(--hs-dk);}
+.flbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);font-family:var(--mono);margin-bottom:5px;}
+input,textarea{width:100%;background:var(--bg);border:1.5px solid var(--bor);border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;transition:all 0.15s;}
+input:focus,textarea:focus{border-color:var(--hs);box-shadow:0 0 0 3px rgba(217,79,112,0.10);}
+textarea{resize:none;line-height:1.6;}
+input::placeholder,textarea::placeholder{color:var(--mut);}
+.mtabs{display:flex;border:1.5px solid var(--bor);border-radius:8px;overflow:hidden;background:var(--sur2);}
+.mtab{flex:1;padding:7px 4px;font-size:10px;font-weight:500;text-align:center;cursor:pointer;background:transparent;color:var(--txt2);border:none;font-family:var(--sans);border-right:1px solid var(--bor);transition:all 0.15s;}
+.mtab:last-child{border-right:none;}.mtab:hover{background:var(--hs-pale);color:var(--hs-dk);}.mtab.sel{background:var(--hs);color:#fff;font-weight:600;}
+.infobanner{background:var(--alt);border-left:3px solid var(--amb);border-radius:0 7px 7px 0;padding:9px 12px;font-size:11px;color:var(--amb);line-height:1.6;margin-top:8px;}
+.dzone{border:2px dashed var(--bor2);border-radius:10px;padding:20px 12px;text-align:center;cursor:pointer;margin-top:8px;transition:all 0.15s;background:var(--sur2);}
+.dzone:hover,.dzone.drag{border-color:var(--hs);background:var(--hs-dim);}
+.dzone p{font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5;}
+.sinfo{margin-top:8px;background:var(--glt);border:1px solid rgba(46,139,90,0.25);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--grn);line-height:1.7;}
+.stree{margin-top:6px;font-family:var(--mono);font-size:9px;color:var(--mut);max-height:68px;overflow-y:auto;line-height:1.9;}
+.rbtn{width:100%;background:var(--hs);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;box-shadow:0 2px 8px rgba(217,79,112,0.35);transition:all 0.15s;}
+.rbtn:hover{background:var(--hs-dk);}.rbtn:disabled{opacity:0.45;cursor:not-allowed;}
+.logsec{padding:10px 16px;flex:1;overflow-y:auto;min-height:80px;max-height:150px;background:var(--sur2);}
+.le{font-family:var(--mono);font-size:10px;line-height:1.7;display:flex;gap:6px;color:var(--txt2);}
+.le+.le{margin-top:1px;}
+.li-info{color:var(--hs);}.li-ok{color:var(--grn);}.li-warn{color:var(--amb);}.li-err{color:var(--red);}.li-think{color:var(--hs-lt);}
+.rhead{padding:14px 24px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:5;}
+.rhead h2{font-size:15px;font-weight:700;color:var(--txt);}.rhead p{font-size:10px;color:var(--mut);margin-top:2px;}
+.pill{font-size:10px;font-family:var(--mono);padding:4px 12px;border-radius:20px;font-weight:600;}
+.pill-idle{background:#F5F5F5;color:var(--mut);}.pill-run{background:var(--hs-dim);color:var(--hs-dk);border:1px solid var(--hs-lt);}
+.pill-ok{background:var(--glt);color:var(--grn);border:1px solid rgba(46,139,90,0.3);}.pill-bad{background:var(--rlt);color:var(--red);border:1px solid rgba(192,32,42,0.3);}
+.expbar{padding:10px 24px;border-bottom:1px solid var(--bor);background:var(--sur2);display:flex;align-items:center;gap:8px;}
+.expbtn{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--sans);cursor:pointer;border:none;transition:all 0.15s;}
+.expbtn-csv{background:var(--grn);color:#fff;}.expbtn-copy{background:var(--bg);border:1.5px solid var(--bor2);color:var(--txt2);}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 24px;border-bottom:1px solid var(--bor);width:100%;}
+.sc{background:#fff;border:1.5px solid var(--bor);border-radius:10px;padding:14px 12px;text-align:center;}
+.sc .n{font-size:26px;font-weight:700;font-family:var(--mono);margin-bottom:3px;}.sc .l{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;}
+.sc-t{border-top:3px solid var(--hs);}.sc-t .n{color:var(--hs);}
+.sc-p{border-top:3px solid var(--grn);}.sc-p .n{color:var(--grn);}
+.sc-f{border-top:3px solid var(--red);}.sc-f .n{color:var(--red);}
+.sc-w{border-top:3px solid var(--amb);}.sc-w .n{color:var(--amb);}
+.rarea{padding:16px 24px;display:flex;flex-direction:column;gap:10px;width:100%;}
+.rc{background:#fff;border:1.5px solid var(--bor);border-radius:10px;overflow:hidden;width:100%;}
+.rch{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bor);}
+.rdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.rc-p{border-left:4px solid var(--grn);}.rc-p .rdot{background:var(--grn);}
+.rc-f{border-left:4px solid var(--red);}.rc-f .rdot{background:var(--red);}
+.rc-w{border-left:4px solid var(--amb);}.rc-w .rdot{background:var(--amb);}
+.rtype{font-size:9px;font-family:var(--mono);color:var(--mut);background:var(--sur2);padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;border:1px solid var(--bor);}
+.rtitle{font-size:13px;font-weight:600;flex:1;color:var(--txt);}
+.rv{font-size:9px;font-family:var(--mono);padding:3px 9px;border-radius:20px;font-weight:700;}
+.rc-p .rv{background:var(--glt);color:var(--grn);}.rc-f .rv{background:var(--rlt);color:var(--red);}.rc-w .rv{background:var(--alt);color:var(--amb);}
+.rcb{padding:13px 16px;font-size:12px;line-height:1.7;color:var(--txt2);}
+.chk{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+.crow{display:flex;align-items:flex-start;gap:7px;font-size:10px;font-family:var(--mono);padding:4px 10px;border-radius:5px;}
+.crow-p{background:var(--glt);}.crow-f{background:var(--rlt);}.crow-w{background:var(--alt);}
+.ci-p{color:var(--grn);flex-shrink:0;font-weight:700;}.ci-f{color:var(--red);flex-shrink:0;font-weight:700;}.ci-w{color:var(--amb);flex-shrink:0;font-weight:700;}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px;text-align:center;color:var(--mut);min-height:300px;}
+.empty .ico{font-size:44px;opacity:0.3;}.empty h3{font-size:15px;font-weight:500;color:var(--txt2);}.empty p{font-size:12px;line-height:1.6;max-width:260px;}
+.tbar{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px 16px;background:var(--hs-dim);border:1.5px solid var(--hs-lt);border-radius:12px;margin:16px 24px;min-height:220px;}
+.tbar-msg{font-size:11px;font-family:var(--mono);color:var(--hs-dk);text-align:center;line-height:1.6;}
+.dancer-wrap{position:relative;width:80px;height:120px;}
+/* Gajan Aerobics stick figure */
+.dancer{position:absolute;bottom:0;left:50%;transform:translateX(-50%);animation:bounce 0.5s ease-in-out infinite alternate;}
+.dancer svg{overflow:visible;}
+/* Body parts animate independently */
+.d-head{animation:headBob 0.5s ease-in-out infinite alternate;}
+.d-arm-l{transform-origin:15px 35px;animation:armL 0.5s ease-in-out infinite alternate;}
+.d-arm-r{transform-origin:45px 35px;animation:armR 0.5s ease-in-out infinite alternate;}
+.d-leg-l{transform-origin:22px 65px;animation:legL 0.5s ease-in-out infinite alternate;}
+.d-leg-r{transform-origin:38px 65px;animation:legR 0.5s ease-in-out infinite alternate;}
+.d-torso{animation:torsoWiggle 0.5s ease-in-out infinite alternate;}
+@keyframes bounce{0%{transform:translateX(-50%) translateY(0);}100%{transform:translateX(-50%) translateY(-8px);}}
+@keyframes headBob{0%{transform:rotate(-5deg);}100%{transform:rotate(5deg);}}
+@keyframes armL{0%{transform:rotate(-60deg);}100%{transform:rotate(30deg);}}
+@keyframes armR{0%{transform:rotate(60deg);}100%{transform:rotate(-30deg);}}
+@keyframes legL{0%{transform:rotate(-30deg);}100%{transform:rotate(20deg);}}
+@keyframes legR{0%{transform:rotate(30deg);}100%{transform:rotate(-20deg);}}
+@keyframes torsoWiggle{0%{transform:rotate(-3deg);}100%{transform:rotate(3deg);}}
+/* Music notes floating */
+.notes{position:absolute;top:0;left:0;width:100%;pointer-events:none;}
+.note{position:absolute;font-size:14px;opacity:0;animation:floatNote 1.5s ease-out infinite;}
+.note:nth-child(1){left:5px;top:10px;animation-delay:0s;}
+.note:nth-child(2){left:55px;top:5px;animation-delay:0.5s;}
+.note:nth-child(3){left:30px;top:0px;animation-delay:1s;}
+@keyframes floatNote{0%{opacity:0;transform:translateY(0) scale(0.5);}40%{opacity:1;}100%{opacity:0;transform:translateY(-40px) scale(1.2);}}
+/* Step counter */
+.step-labels{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.step-pill{font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(217,79,112,0.15);color:var(--hs-dk);border:1px solid var(--hs-lt);}
+.step-pill.active{background:var(--hs);color:#fff;border-color:var(--hs);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hlogo">&#x1F916;</div>
+  <div class="htxt"><h1>Rise QA Tool</h1><p>AI-powered course QA &mdash; single-shot LLM (not agentic)</p></div>
+  <button class="hreset" id="reset-btn" data-action="reset">&#x21BA; Reset</button>
+  <div class="hbadge">v3.1</div>
+</div>
+
+<div class="app">
+  <div class="left">
+    <div class="sec">
+      <div class="slbl">// AI Provider</div>
+      <div class="pgrid">
+        <button class="pcard sel" id="card-claude" data-action="provider" data-id="claude"><div class="plogo">&#x1F7E0;</div><div class="pname">Claude</div><div class="psub">Anthropic</div></button>
+        <button class="pcard" id="card-gemini" data-action="provider" data-id="gemini"><div class="plogo">&#x1F535;</div><div class="pname">Gemini</div><div class="psub">Google AI</div></button>
+        <button class="pcard" id="card-gpt" data-action="provider" data-id="gpt"><div class="plogo">&#x1F7E2;</div><div class="pname">ChatGPT</div><div class="psub">OpenAI</div></button>
+        <button class="pcard" id="card-copilot" data-action="provider" data-id="copilot"><div class="plogo">&#x1F537;</div><div class="pname">Copilot</div><div class="psub">Azure OpenAI</div></button>
+      </div>
+      <div style="margin-top:11px;"><div class="flbl">API Key</div><input type="password" id="api-key" placeholder="Paste your API key here..."></div>
+      <div id="az-wrap" style="display:none;margin-top:8px;">
+        <div class="flbl">Azure Endpoint</div><input type="url" id="az-ep" placeholder="https://YOUR-RESOURCE.openai.azure.com/">
+        <div class="flbl" style="margin-top:6px;">Deployment Name</div><input type="text" id="az-dep" placeholder="your-deployment-name">
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="slbl">// Input Mode</div>
+      <div class="mtabs">
+        <button class="mtab sel" id="tab-url" data-action="mode" data-id="url">&#x1F517; URL</button>
+        <button class="mtab" id="tab-html" data-action="mode" data-id="html">&#x1F4C4; HTML</button>
+        <button class="mtab" id="tab-scorm" data-action="mode" data-id="scorm">&#x1F4E6; SCORM</button>
+        <button class="mtab" id="tab-demo" data-action="mode" data-id="demo">&#x1F9EA; Demo</button>
+      </div>
+      <div id="pane-url" style="margin-top:10px;">
+        <div class="flbl">Review 360 / Rise Published URL</div>
+        <input type="url" id="course-url" placeholder="https://360.articulate.com/review/content/...">
+        <div class="infobanner">Supports Review 360 links and any publicly accessible Rise output. Fetched via CORS proxy.</div>
+      </div>
+      <div id="pane-html" style="display:none;margin-top:10px;"><div class="flbl">Course HTML Source</div><textarea id="html-input" rows="8" placeholder="Paste Rise course HTML here..."></textarea></div>
+      <div id="pane-scorm" style="display:none;margin-top:10px;">
+        <div class="flbl">Upload SCORM Package (.zip)</div>
+        <div class="dzone" id="dropzone"><div style="font-size:28px;">&#x1F4E6;</div><p>Click to browse or drag and drop your SCORM .zip file</p><input type="file" id="scorm-file" accept=".zip" style="display:none;"></div>
+        <div id="scorm-info" style="display:none;"><div class="sinfo" id="scorm-status"></div><div class="stree" id="scorm-tree"></div></div>
+      </div>
+      <div id="pane-demo" style="display:none;margin-top:10px;"><div style="background:var(--glt);border:1px solid rgba(46,139,90,0.25);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--grn);line-height:1.6;">Demo course loaded - 12 blocks, 7 planted bugs. Add API key and run.</div></div>
+      <button class="rbtn" id="run-btn" data-action="run">&#x25B6; Run QA Analysis</button>
+    </div>
+
+    <div style="padding:10px 16px 6px;border-bottom:1px solid var(--bor);"><div class="slbl">// Agent Log</div></div>
+    <div class="logsec" id="logarea"><div class="le"><span class="li-info">-&gt;</span><span>Ready. Select provider, add key, choose mode.</span></div></div>
+  </div>
+
+  <div class="right">
+    <div class="rhead"><div><h2>QA Report</h2><p id="rsub">No analysis run yet</p></div><div class="pill pill-idle" id="spill">IDLE</div></div>
+    <div class="expbar" id="export-bar" style="display:none;">
+      <button class="expbtn expbtn-csv" id="export-btn" data-action="export">Export CSV</button>
+      <button class="expbtn expbtn-copy" id="copy-btn" data-action="copy">Copy Summary</button>
+    </div>
+    <div id="rarea" style="flex:1;"><div class="empty"><div class="ico">&#x1F50D;</div><h3>Awaiting Input</h3><p>Select a provider, paste your API key, choose an input mode, and run the agent.</p></div></div>
+  </div>
+</div>
+
+<script>
+var P={claude:{type:"anthropic",ep:"https://api.anthropic.com/v1/messages"},gemini:{type:"gemini",ep:"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"},gpt:{type:"openai",ep:"https://api.openai.com/v1/chat/completions"},copilot:{type:"azure",ep:null}};
+var M={anthropic:"claude-sonnet-4-5",gemini:"gemini-3.5-flash",openai:"gpt-4o",azure:""};
+var PX=["https://corsproxy.io/?","https://api.allorigins.win/raw?url="];
+
+var DEMO=[
+  '<section id="text-media" data-block="text-media"><h2>Why Safety Matters</h2><img src="https://broken.invalid/x.jpg" alt=""></section>',
+  '<section id="button-block" data-block="button"><a href="#">Download</a></section>',
+  '<section id="accordion" data-block="accordion"><div class="accordion-item"><div class="accordion-header">Fire</div><div class="accordion-body">Know exits</div></div><div class="accordion-item broken"><div class="accordion-header">Electrical</div><div class="accordion-body">No damaged cables</div></div></section>',
+  '<section id="tabs" data-block="tabs"><div class="tab-panel" id="t1">Physical hazards</div><div class="tab-panel" id="t3"></div></section>',
+  '<section id="flashcards" data-block="flashcards"><div class="flashcard"><div class="front">PPE?</div><div class="back">Personal Protective Equipment</div></div></section>',
+  '<section id="video" data-block="video"><video controls></video></section>',
+  '<section id="audio" data-block="audio"><audio controls><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio></section>',
+  '<section id="labelled-graphic" data-block="labelled-graphic"><div class="hotspot" data-tooltip="Head">1</div><div class="hotspot" data-tooltip="">2</div></section>',
+  '<section id="process" data-block="process"><div class="step"><span>1</span><h4>Identify</h4></div><div class="step"><span>2</span><h4>Assess</h4></div></section>',
+  '<section id="quiz" data-block="quiz"><p class="question">First step?</p><div class="option" data-correct="false">PPE</div><div class="option" data-correct="false">Admin</div><div class="option" data-correct="false">Eliminate</div></section>',
+  '<section id="sorting" data-block="sorting"><div class="sort-col" data-category="Admin"><div class="sort-item">Safety training</div></div></section>',
+  '<section id="scenario" data-block="scenario"><div class="scene">Colleague lifting wrong.</div><div class="choice" data-outcome="good">Demonstrate technique</div></section>'
+].join('\n');
+
+var cur="claude",curMode="url",scormHTML=null,scormName="";
+
+function log(msg,type){
+  var a=document.getElementById("logarea");
+  var el=document.createElement("div");
+  el.className="le";
+  var ic={info:"->",ok:"OK",warn:"!!",err:"XX",think:".."};
+  var ico=ic[type]||"->";
+  var cls="li-"+(type||"info");
+  var sp=document.createElement("span");
+  sp.className=cls;
+  sp.textContent=ico;
+  var sp2=document.createElement("span");
+  sp2.textContent=msg;
+  el.appendChild(sp);
+  el.appendChild(sp2);
+  a.appendChild(el);
+  a.scrollTop=a.scrollHeight;
+}
+
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);})}
+function setPill(cls,txt){var e=document.getElementById("spill");e.className="pill "+cls;e.textContent=txt;}
+function thinking(msg,step,totalSteps){
+  var steps=step&&totalSteps?step+"/"+totalSteps:"";
+  var agentSteps=["Fetching content","Parsing blocks","Reading structure","Sending to AI","Awaiting response","Parsing results"];
+  var pills=agentSteps.map(function(s,i){
+    var active=msg&&msg.toLowerCase().indexOf(s.toLowerCase().split(" ")[0])>-1;
+    return '<span class="step-pill'+(active?" active":"")+'">'+(i+1)+". "+s+"</span>";
+  }).join("");
+  document.getElementById("rarea").innerHTML=
+    '<div class="tbar">'
+    +'<div class="dancer-wrap">'
+    +'<div class="notes">'
+    +'<span class="note">&#9835;</span>'
+    +'<span class="note">&#9834;</span>'
+    +'<span class="note">&#9835;</span>'
+    +'</div>'
+    +'<div class="dancer">'
+    +'<svg width="60" height="100" viewBox="0 0 60 100">'
+    // Head
+    +'<circle class="d-head" cx="30" cy="12" r="10" fill="var(--hs)" stroke="var(--hs-dk)" stroke-width="1.5"/>'
+    // Face
+    +'<circle cx="26" cy="11" r="1.5" fill="#fff"/>'
+    +'<circle cx="34" cy="11" r="1.5" fill="#fff"/>'
+    +'<path d="M26 16 Q30 19 34 16" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
+    // Torso
+    +'<g class="d-torso">'
+    +'<line x1="30" y1="22" x2="30" y2="60" stroke="var(--hs-dk)" stroke-width="3" stroke-linecap="round"/>'
+    // Left arm
+    +'<line class="d-arm-l" x1="30" y1="30" x2="8" y2="48" stroke="var(--hs)" stroke-width="2.5" stroke-linecap="round"/>'
+    // Right arm  
+    +'<line class="d-arm-r" x1="30" y1="30" x2="52" y2="48" stroke="var(--hs)" stroke-width="2.5" stroke-linecap="round"/>'
+    +'</g>'
+    // Left leg
+    +'<line class="d-leg-l" x1="30" y1="60" x2="12" y2="90" stroke="var(--hs-dk)" stroke-width="2.5" stroke-linecap="round"/>'
+    // Right leg
+    +'<line class="d-leg-r" x1="30" y1="60" x2="48" y2="90" stroke="var(--hs-dk)" stroke-width="2.5" stroke-linecap="round"/>'
+    // Shoes
+    +'<ellipse cx="10" cy="92" rx="7" ry="4" fill="var(--hs-dk)"/>'
+    +'<ellipse cx="50" cy="92" rx="7" ry="4" fill="var(--hs-dk)"/>'
+    +'</svg>'
+    +'</div>'
+    +'</div>'
+    +'<div class="tbar-msg"><strong>Analysing your course...</strong><br>'+msg+'</div>'
+    +'<div class="step-labels">'+pills+'</div>'
+    +'</div>';
+}
+
+function selectProvider(id){
+  cur=id;
+  ["claude","gemini","gpt","copilot"].forEach(function(x){
+    var c=document.getElementById("card-"+x);
+    if(c)c.classList.remove("sel");
+  });
+  var card=document.getElementById("card-"+id);
+  if(card)card.classList.add("sel");
+  document.getElementById("az-wrap").style.display=id==="copilot"?"block":"none";
+}
+
+function setMode(mode){
+  curMode=mode;
+  ["url","html","scorm","demo"].forEach(function(x){
+    var t=document.getElementById("tab-"+x);
+    if(t)t.classList.remove("sel");
+    var p=document.getElementById("pane-"+x);
+    if(p)p.style.display=x===mode?"block":"none";
+  });
+  var tab=document.getElementById("tab-"+mode);
+  if(tab)tab.classList.add("sel");
+}
+
+function resetAll(){
+  scormHTML=null;scormName="";
+  ["api-key","course-url","html-input"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";});
+  var si=document.getElementById("scorm-info");if(si)si.style.display="none";
+  var ss=document.getElementById("scorm-status");if(ss)ss.innerHTML="";
+  var st=document.getElementById("scorm-tree");if(st)st.innerHTML="";
+  var sf=document.getElementById("scorm-file");if(sf)sf.value="";
+  var la=document.getElementById("logarea");
+  if(la){la.innerHTML="";var el=document.createElement("div");el.className="le";var s=document.createElement("span");s.className="li-info";s.textContent="->";var s2=document.createElement("span");s2.textContent="Reset. Ready for new analysis.";el.appendChild(s);el.appendChild(s2);la.appendChild(el);}
+  document.getElementById("rarea").innerHTML='<div class="empty"><div class="ico">&#x1F50D;</div><h3>Awaiting Input</h3><p>Select a provider, paste your API key, choose an input mode, and run the tool.</p></div>';
+  var eb=document.getElementById("export-bar");if(eb)eb.style.display="none";
+  document.getElementById("rsub").textContent="No analysis run yet";
+  window._qa=null;
+  setPill("pill-idle","IDLE");
+  selectProvider("claude");
+  setMode("url");
+}
+
+function exportCSV(){
+  if(!window._qa)return;
+  var rows=[["Block ID","Block Type","Verdict","Summary","Detail"]];
+  window._qa.forEach(function(r){
+    rows.push([r.blockId||"",r.blockType||"",r.verdict||"",(r.summary||"").replace(/,/g,";"),(r.detail||"").replace(/,/g,";")]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+c+'"';}).join(",");}).join("\n");
+  var a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+  a.download="rise_qa_"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();
+}
+
+function copySummary(){
+  if(!window._qa)return;
+  var lines=window._qa.map(function(r){return(r.verdict==="PASS"?"PASS":r.verdict==="FAIL"?"FAIL":"WARN")+" ["+r.blockType+"] "+r.summary;});
+  navigator.clipboard.writeText(lines.join("\n")).then(function(){
+    var b=document.getElementById("copy-btn");
+    if(b){b.textContent="Copied!";setTimeout(function(){b.textContent="Copy Summary";},2000);}
+  });
+}
+
+async function handleScormFile(file){
+  if(!file||!file.name.toLowerCase().endsWith(".zip")){alert("Please upload a .zip file");return;}
+  scormName=file.name;
+  log("Reading: "+file.name,"info");
+  var ss=document.getElementById("scorm-status");
+  if(ss)ss.textContent="Extracting...";
+  document.getElementById("scorm-info").style.display="block";
+  try{
+    var zip=await JSZip.loadAsync(file);
+    var files=Object.keys(zip.files).filter(function(f){return!zip.files[f].dir;});
+    var pri=["story.html","index.html","index_lms.html"];
+    var entry=null;
+    for(var i=0;i<pri.length;i++){
+      var mt=files.find(function(f){return f===pri[i]||f.endsWith("/"+pri[i]);});
+      if(mt){entry=mt;break;}
+    }
+    if(!entry)entry=files.find(function(f){return f.endsWith(".html");});
+    if(!entry)throw new Error("No HTML entry point found");
+    var main=await zip.files[entry].async("string");
+    var ex=files.filter(function(f){return f.includes("story_content")&&f.endsWith(".html")&&f!==entry;});
+    for(var j=0;j<Math.min(ex.length,20);j++){
+      try{main+="\n"+await zip.files[ex[j]].async("string");}catch(e){}
+    }
+    scormHTML=main;
+    var mf=files.find(function(f){return f.endsWith("imsmanifest.xml");});
+    var ver="SCORM";
+    if(mf){var mc=await zip.files[mf].async("string");ver=mc.includes("2004")?"SCORM 2004":mc.includes("1.2")?"SCORM 1.2":"SCORM";}
+    var hc=files.filter(function(f){return f.endsWith(".html");}).length;
+    var ic=files.filter(function(f){return/\.(jpg|jpeg|png|gif|svg)$/i.test(f);}).length;
+    var vc=files.filter(function(f){return/\.(mp4|webm)$/i.test(f);}).length;
+    if(ss)ss.innerHTML="OK: "+ver+": "+file.name+"<br>"+files.length+" files - "+hc+" HTML - "+ic+" img - "+vc+" video<br>Entry: "+entry;
+    var tree=files.slice(0,18).map(function(f){return"- "+f;});
+    if(files.length>18)tree.push("... and "+(files.length-18)+" more");
+    var st=document.getElementById("scorm-tree");
+    if(st)st.innerHTML=tree.join("<br>");
+    log(ver+" ready: "+files.length+" files","ok");
+  }catch(e){
+    if(ss)ss.textContent="Error: "+e.message;
+    log("SCORM error: "+e.message,"err");
+  }
+}
+
+async function fetchProxy(url){
+  for(var i=0;i<PX.length;i++){
+    try{
+      log("Proxy: "+PX[i].split("?")[0].replace("https://",""),"info");
+      var res=await fetch(PX[i]+encodeURIComponent(url),{signal:AbortSignal.timeout(14000)});
+      if(res.ok){var txt=await res.text();if(txt&&txt.length>200){log("Fetched "+Math.round(txt.length/1024)+"KB","ok");return txt;}}
+    }catch(e){log("Proxy failed: "+e.message,"warn");}
+  }
+  throw new Error("All proxies failed.");
+}
+
+function extractBlocks(raw){
+  var doc=new DOMParser().parseFromString(raw,"text/html");
+  var title=doc.title||"Rise Course";
+
+  // ── Strategy 1: Rise SCORM JSON blob (base64 encoded in index.html) ──────
+  // Real Rise exports store ALL content as a base64 JSON blob - parse it directly
+  var riseData=extractRiseJSON(raw);
+  if(riseData){
+    return{title:riseData.title,blocks:riseData.blocks};
+  }
+
+  // ── Strategy 2: DOM selectors ────────────────────────────────────────────
+  var found=[];
+  var sels=["[data-block]","[data-type]",".block-content",".rise-block",
+            "[class*='block-']","[data-slide]","[data-component]",
+            "section[id]","article[id]","section","article"];
+  for(var s=0;s<sels.length;s++){
+    found=Array.from(doc.querySelectorAll(sels[s]));
+    if(found.length>1)break;
+  }
+
+  // ── Strategy 3: top-level body children ──────────────────────────────────
+  if(found.length<=1){
+    var ch=Array.from(doc.body?doc.body.children:[]).filter(function(el){
+      return el.textContent.trim().length>20||el.querySelector("img,video,audio,a,button");
+    });
+    if(ch.length>1)found=ch;
+  }
+
+  // ── Strategy 4: raw HTML signal scan ─────────────────────────────────────
+  if(found.length<=1){
+    return extractSignalsFromRaw(raw,title);
+  }
+
+  var dd=found.filter(function(el){
+    return!found.some(function(o){return o!==el&&o.contains&&o.contains(el);});
+  });
+  if(dd.length>0)found=dd;
+  return{title:title,blocks:found.slice(0,30).map(function(el,i){return makeBlock(el,i);})};
+}
+
+function extractRiseJSON(raw){
+  // Rise SCORM stores course as base64 JSON inside Promise.resolve(deserialize("..."))
+  // Must use TextDecoder (not plain atob) because decoded bytes are UTF-8, not Latin-1
+
+  function b64ToJSON(blob){
+    try{
+      // Use Uint8Array + TextDecoder - same as Rise's own deserialize()
+      var binary=atob(blob);
+      var bytes=new Uint8Array(binary.length);
+      for(var b=0;b<binary.length;b++)bytes[b]=binary.charCodeAt(b);
+      var text=new TextDecoder("utf-8").decode(bytes);
+      var json=JSON.parse(text);
+      if(json&&json.course&&json.course.lessons&&json.course.lessons.length>0)return json;
+    }catch(e){}
+    return null;
+  }
+
+  // Pattern 1: exact Rise pattern - Promise.resolve(deserialize("BLOB"))
+  var re1=/Promise\.resolve\(deserialize\("([A-Za-z0-9+\/=]{100,})"\)\)/g;
+  var m1;
+  while((m1=re1.exec(raw))!==null){
+    var result=b64ToJSON(m1[1]);
+    if(result)return parseRiseJSON(result);
+  }
+
+  // Pattern 2: any deserialize("...") or deserialize('...')
+  var re2=/deserialize\(["']([A-Za-z0-9+\/=]{100,})["']\)/g;
+  var m2;
+  while((m2=re2.exec(raw))!==null){
+    var result2=b64ToJSON(m2[1]);
+    if(result2)return parseRiseJSON(result2);
+  }
+
+  // Pattern 3: any large base64 string (>1000 chars)
+  var re3=/["']([A-Za-z0-9+\/]{1000,}={0,2})["']/g;
+  var m3,seen={};
+  while((m3=re3.exec(raw))!==null){
+    var key=m3[1].slice(0,20);
+    if(seen[key])continue;
+    seen[key]=true;
+    var result3=b64ToJSON(m3[1]);
+    if(result3)return parseRiseJSON(result3);
+  }
+
+  return null;
+}
+
+function parseRiseJSON(data){
+  var course=data.course;
+  var lessons=course.lessons||[];
+  var allTitles=lessons.map(function(l){return l.title||"";}).join(" | ").slice(0,80);
+  var title="Rise Course: "+allTitles;
+
+  var issueBlocks=[];   // blocks with real problems
+  var quizBlocks=[];    // all quiz items
+  var stats={total:0,images:0,videos:0,audios:0,interactives:0,texts:0};
+
+  lessons.forEach(function(lesson){
+    var lTitle=(lesson.title||"Untitled").slice(0,30);
+    var lType=lesson.type||"blocks";
+
+    if(lType==="quiz"){
+      (lesson.items||[]).forEach(function(item){
+        var itype=item.type||"UNKNOWN";
+        // Rise quiz structure: question is in 'title', answers in 'answers', correct answer id in 'correct'/'corrects'
+        var qtext=(item.title||item.body||"").replace(/<[^>]+>/g,"").slice(0,80);
+        var answers=item.answers||item.choices||[];
+        var correctId=item.correct||"";
+        var corrects=item.corrects||[];
+        
+        // Determine if there's a correct answer based on type
+        var hasCorrect=false;
+        if(itype==="MULTIPLE_CHOICE"||itype==="MULTIPLE_SELECT"){
+          // correct is an ID string pointing to the right answer
+          hasCorrect=!!(correctId)||(corrects&&corrects.length>0);
+          // Also check if any answer has correct:true
+          if(!hasCorrect) hasCorrect=answers.some(function(a){return a.correct===true;});
+        } else if(itype==="MATCHING"){
+          // Matching: answers have matchTitle - if answers exist it's configured
+          hasCorrect=answers.length>0&&answers.every(function(a){return a.matchTitle;});
+        } else if(itype==="FILL_IN_THE_BLANK"){
+          // FITB: answers array contains acceptable answers
+          hasCorrect=answers.length>0;
+        } else {
+          hasCorrect=!!(correctId)||corrects.length>0||answers.some(function(a){return a.correct;});
+        }
+        
+        var issues=[];
+        if(!qtext) issues.push("question text is EMPTY");
+        if(!answers.length) issues.push("no answers/choices defined");
+        if(!hasCorrect) issues.push("NO CORRECT ANSWER defined");
+        
+        var status=issues.length?"ISSUES: "+issues.join("; "):"correct answer defined, "+answers.length+" answers";
+        quizBlocks.push({
+          id:item.id||"quiz",
+          type:"Knowledge Check ("+itype+")",
+          html:"<!-- Q: "+qtext+" | type:"+itype+" | "+status+" -->"
+        });
+      });
+      return;
+    }
+
+    (lesson.items||[]).forEach(function(item){
+      var btype=item.type||"unknown";
+      if(btype==="divider")return;
+      stats.total++;
+
+      var subs=item.items||[];
+      var issues=[];
+
+      subs.forEach(function(sub){
+        // Image checks
+        var img=(sub.media||{}).image||{};
+        if(img&&typeof img==="object"&&Object.keys(img).length){
+          stats.images++;
+          var src=img.src||img.key||img.crushedKey||"";
+          if(!src) issues.push("image has NO SRC attribute");
+        }
+        // Empty paragraph in text block
+        if(btype==="text"&&sub.paragraph!==undefined){
+          var txt=(sub.paragraph||"").replace(/<[^>]+>/g,"").trim();
+          if(!txt) issues.push("text block has EMPTY paragraph");
+        }
+        // Dead link
+        var href=sub.href||sub.url||"";
+        if(href==="#"||href==="about:blank") issues.push("button link is DEAD (href=#)");
+        // Video
+        var vid=sub.video||{};
+        if(vid&&typeof vid==="object"&&Object.keys(vid).length){
+          stats.videos++;
+          var vsrc=vid.src||vid.url||vid.key||"";
+          if(!vsrc) issues.push("video has NO SOURCE");
+        }
+        // Audio
+        var aud=sub.audio||{};
+        if(aud&&typeof aud==="object"&&Object.keys(aud).length){
+          stats.audios++;
+          var asrc=aud.src||aud.url||aud.key||"";
+          if(!asrc) issues.push("audio has NO SOURCE");
+        }
+        // Hotspots
+        if(sub.hotspots){
+          var eh=sub.hotspots.filter(function(h){return!h.tooltip&&!h.text&&!h.label;});
+          if(eh.length) issues.push(eh.length+" hotspot(s) have NO TOOLTIP text");
+        }
+        // Tabs
+        if(sub.tabs){
+          stats.interactives++;
+          var et=sub.tabs.filter(function(t){return!t.content&&!t.paragraph&&!t.title;});
+          if(et.length) issues.push(et.length+" tab(s) are EMPTY");
+        }
+        // Accordion
+        if(sub.accordion||sub.items){
+          stats.interactives++;
+        }
+      });
+
+      if(btype==="interactive") stats.interactives++;
+
+      // Only add to report if there are actual issues
+      if(issues.length>0){
+        issueBlocks.push({
+          id:item.id||("block-"+issueBlocks.length),
+          type:toBlockTypeName(btype),
+          html:"<!-- Lesson: "+lTitle+" | ISSUES: "+issues.join("; ")+" -->"
+        });
+      }
+    });
+  });
+
+  // Build final block list: summary + issues + quiz
+  var blocks=[];
+
+  // 1. Course structure summary (always first)
+  blocks.push({
+    id:"course-overview",
+    type:"Course Structure",
+    html:"<!-- Course has "+lessons.length+" lessons, "+stats.total+" content blocks: "
+      +stats.images+" images, "+stats.videos+" videos, "+stats.audios+" audio, "
+      +stats.interactives+" interactives, "+issueBlocks.length+" blocks with issues found -->"
+  });
+
+  // 2. Only blocks with real issues
+  issueBlocks.forEach(function(b){ blocks.push(b); });
+
+  // 3. All quiz items
+  quizBlocks.forEach(function(b){ blocks.push(b); });
+
+  // 4. SCORM tracking
+  blocks.push({
+    id:"scorm-tracking",
+    type:"SCORM Tracking",
+    html:"<!-- SCORM 1.2 package | verify: LMSSetValue suspend_data saved, completion trigger fires, mastery score set -->"
+  });
+
+  return{title:title,blocks:blocks};
+}
+
+function toBlockTypeName(t){
+  var map={
+    "text":"Text","image":"Image","list":"List","video":"Video",
+    "audio":"Audio","interactive":"Interactive","quiz":"Knowledge Check",
+    "accordion":"Accordion","tabs":"Tabs","flashcard":"Flashcards",
+    "button":"Button","divider":"Divider","hotspot":"Labelled Graphic",
+    "process":"Process","timeline":"Timeline","scenario":"Scenario",
+    "statement":"Statement","quote":"Quote","numbered-list":"Numbered List",
+    "MULTIPLE_CHOICE":"Multiple Choice Quiz","MATCHING":"Matching Quiz",
+    "FILL_IN_THE_BLANK":"Fill in the Blank"
+  };
+  return map[t]||t;
+}
+
+
+function makeBlock(el,i){
+  var attrs=[];
+  if(el.id)attrs.push('id="'+el.id+'"');
+  var db=el.getAttribute("data-block");if(db)attrs.push('data-block="'+db+'"');
+  var sig=[];
+  var imgs=el.querySelectorAll("img");
+  imgs.forEach(function(img){
+    var src=img.getAttribute("src")||"";
+    if(!src||src.indexOf("broken")>-1||src.indexOf("invalid")>-1||src==="")
+      sig.push('img src="'+src+'" [BROKEN]');
+    else sig.push('img src="'+src+'"');
+  });
+  var links=el.querySelectorAll("a");
+  links.forEach(function(a){sig.push('a href="'+(a.getAttribute("href")||"")+'"');});
+  var vids=el.querySelectorAll("video");
+  vids.forEach(function(vid){
+    var vs=vid.querySelector("source");
+    sig.push("video "+(vs?'src="'+vs.getAttribute("src")+'"':"NO-SOURCE"));
+  });
+  var auds=el.querySelectorAll("audio");
+  auds.forEach(function(aud){
+    var as=aud.querySelector("source");
+    sig.push("audio "+(as?'src="'+as.getAttribute("src")+'"':"NO-SOURCE"));
+  });
+  var opts=el.querySelectorAll("[data-correct]");
+  opts.forEach(function(o){sig.push('option data-correct="'+o.getAttribute("data-correct")+'"');});
+  var hots=el.querySelectorAll("[data-tooltip]");
+  hots.forEach(function(h){sig.push('hotspot tooltip="'+h.getAttribute("data-tooltip")+'"');});
+  var br=el.querySelectorAll(".broken");if(br.length)sig.push("broken-accordion:"+br.length);
+  var et=Array.from(el.querySelectorAll(".tab-panel")).filter(function(t){return!t.textContent.trim();});
+  if(et.length)sig.push("empty-tabs:"+et.length);
+  var txt=el.textContent.replace(/\s+/g," ").trim().slice(0,120);
+  var bh="<"+el.tagName.toLowerCase()+" "+attrs.join(" ")+">\n";
+  if(sig.length)bh+="  <!-- signals: "+sig.join(", ")+" -->\n";
+  bh+="  <!-- text: "+txt+" -->\n</"+el.tagName.toLowerCase()+">";
+  // Detect script-contaminated blocks (system JS leaked into content layer)
+  var isScript=!sig.length&&el.querySelector("p,h2,h3,img,video,audio")==null
+    &&(txt.indexOf("window.")>-1||txt.indexOf("resizeTo")>-1||txt.indexOf(".call(")>-1||txt.indexOf("function(")>-1);
+  var detectedType=el.getAttribute("data-block")||el.getAttribute("data-type")||(isScript?"Script Contamination":el.tagName.toLowerCase());
+  if(isScript){
+    bh="<!-- SCRIPT CONTAMINATION: system JavaScript leaked into content block. Text snippet: "+txt.slice(0,120)+" -->";
+  }
+  return{
+    id:el.id||el.getAttribute("data-block")||("block-"+(i+1)),
+    type:detectedType,
+    html:bh
+  };
+}
+
+function extractSignalsFromRaw(raw, title){
+  // Scan raw HTML string for QA signals when DOM parsing yields nothing useful
+  var blocks=[];
+
+  // Images
+  var imgMatches=raw.match(/<img[^>]+>/gi)||[];
+  if(imgMatches.length){
+    var sigs=imgMatches.slice(0,10).map(function(tag){
+      var src=(tag.match(/src=["']([^"']*)/)||[])[1]||"MISSING";
+      var alt=(tag.match(/alt=["']([^"']*)/)||[])[1];
+      return "src="+src+(alt===undefined?" [NO-ALT]":"");
+    });
+    blocks.push({id:"images",type:"Text & Media",html:"<!-- Images found:\n  "+sigs.join("\n  ")+" -->"});
+  }
+
+  // Links/Buttons
+  var linkMatches=raw.match(/<a[^>]+href=["'][^"']*["'][^>]*>/gi)||[];
+  if(linkMatches.length){
+    var deadLinks=linkMatches.filter(function(t){return t.indexOf('href="#"')>-1||t.indexOf("href=''")>-1;});
+    blocks.push({id:"links",type:"Button",html:'<!-- Links found: '+linkMatches.length+', dead links (href="#"): '+deadLinks.length+' -->'});
+  }
+
+  // Video
+  var vidMatches=raw.match(/<video[^>]*>[\s\S]*?<\/video>/gi)||[];
+  vidMatches.forEach(function(v,i){
+    var hasSrc=/<source[^>]+src=/i.test(v);
+    blocks.push({id:"video-"+(i+1),type:"Video",html:"<!-- video element: "+(hasSrc?"has source":"NO SOURCE - bug")+" -->"});
+  });
+
+  // Audio
+  var audMatches=raw.match(/<audio[^>]*>[\s\S]*?<\/audio>/gi)||[];
+  audMatches.forEach(function(a,i){
+    var hasSrc=/<source[^>]+src=/i.test(a);
+    blocks.push({id:"audio-"+(i+1),type:"Audio",html:"<!-- audio element: "+(hasSrc?"has source":"NO SOURCE")+" -->"});
+  });
+
+  // Quiz options
+  var correctAttrs=raw.match(/data-correct=["'][^"']*["']/gi)||[];
+  if(correctAttrs.length){
+    var allFalse=correctAttrs.every(function(a){return a.indexOf("false")>-1;});
+    blocks.push({id:"quiz",type:"Knowledge Check",html:'<!-- Quiz options: '+correctAttrs.length+', all data-correct=false: '+allFalse+' -->'});
+  }
+
+  // Hotspots
+  var tooltips=raw.match(/data-tooltip=["'][^"']*["']/gi)||[];
+  if(tooltips.length){
+    var empty=tooltips.filter(function(t){return t===('data-tooltip=""')||t===("data-tooltip=''");});
+    blocks.push({id:"hotspots",type:"Labelled Graphic",html:'<!-- Hotspots: '+tooltips.length+', empty tooltips: '+empty.length+' -->'});
+  }
+
+  // Accordion broken items
+  if(raw.indexOf('class="broken"')>-1||raw.indexOf("class='broken'")>-1){
+    blocks.push({id:"accordion",type:"Accordion",html:'<!-- Accordion item with class="broken" found -->'});
+  }
+
+  // Empty tab panels
+  var tabMatches=raw.match(/<div[^>]+class=["'][^"']*tab-panel[^"']*["'][^>]*>[\s]*<\/div>/gi)||[];
+  if(tabMatches.length){
+    blocks.push({id:"tabs",type:"Tabs",html:'<!-- Empty tab panels found: '+tabMatches.length+' -->'});
+  }
+
+  // SCORM API calls
+  if(raw.indexOf("LMSSetValue")>-1||raw.indexOf("SetValue")>-1){
+    var hasSuspend=raw.indexOf("suspend_data")>-1;
+    blocks.push({id:"scorm-api",type:"SCORM Tracking",html:'<!-- SCORM API calls present, suspend_data: '+hasSuspend+' -->'});
+  }
+
+  // General content summary
+  var bodyText=(raw.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim()).slice(0,300);
+  if(bodyText)blocks.push({id:"content",type:"General Content",html:"<!-- Page text sample: "+bodyText+" -->"});
+
+  if(!blocks.length){
+    blocks.push({id:"unknown",type:"Unknown Structure",html:"<!-- No recognisable Rise/SCORM block patterns detected in this HTML -->"});
+  }
+
+  return{title:title,blocks:blocks};
+}
+
+async function callAPI(sys,user){
+  var p=P[cur];
+  var key=document.getElementById("api-key").value.trim();
+  if(!key)throw new Error("Please paste your API key first");
+  var model=M[p.type];
+  var res,data;
+  if(p.type==="anthropic"){
+    res=await fetch(p.ep,{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:model,max_tokens:16000,system:sys,messages:[{role:"user",content:user}]})});
+    data=await res.json();if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+    return data.content.map(function(c){return c.text||"";}).join("").trim();
+  }else if(p.type==="gemini"){
+    var ep=p.ep.replace("{m}",model);
+    var body=JSON.stringify({contents:[{parts:[{text:sys+"\n\n"+user}]}],generationConfig:{maxOutputTokens:16000}});
+    res=await fetch(ep+"?key="+key,{method:"POST",headers:{"Content-Type":"application/json"},body:body});
+    data=await res.json();if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+    return(data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text)||"";
+  }else if(p.type==="openai"){
+    res=await fetch(p.ep,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:model,max_tokens:16000,messages:[{role:"system",content:sys},{role:"user",content:user}]})});
+    data=await res.json();if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+    return data.choices[0].message.content.trim();
+  }else{
+    var azEp=document.getElementById("az-ep").value.trim().replace(/\/$/,"");
+    var dep=document.getElementById("az-dep").value.trim()||"gpt-4o";
+    if(!azEp)throw new Error("Azure endpoint required");
+    res=await fetch(azEp+"/openai/deployments/"+dep+"/chat/completions?api-version=2024-02-01",{method:"POST",headers:{"Content-Type":"application/json","api-key":key},body:JSON.stringify({max_tokens:16000,messages:[{role:"system",content:sys},{role:"user",content:user}]})});
+    data=await res.json();if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+    return data.choices[0].message.content.trim();
+  }
+}
+
+async function runQA(){
+  var btn=document.getElementById("run-btn");
+  btn.disabled=true;btn.textContent="Analysing...";
+  setPill("pill-run","RUNNING");
+  document.getElementById("rsub").textContent="Working...";
+  var eb=document.getElementById("export-bar");if(eb)eb.style.display="none";
+  document.getElementById("logarea").innerHTML="";
+  try{
+    log("Provider: "+cur+" - Mode: "+curMode,"info");
+    var html2="",isLive=false,srcURL="";
+    if(curMode==="url"){
+      srcURL=document.getElementById("course-url").value.trim();
+      if(!srcURL)throw new Error("Please enter a course URL");
+      thinking("Fetching live course via proxy...");
+      html2=await fetchProxy(srcURL);isLive=true;
+    }else if(curMode==="html"){
+      html2=document.getElementById("html-input").value.trim();
+      if(!html2)throw new Error("Please paste course HTML");
+      log("HTML: "+Math.round(html2.length/1024)+"KB","info");
+    }else if(curMode==="scorm"){
+      if(!scormHTML)throw new Error("Please upload a SCORM .zip first");
+      html2=scormHTML;srcURL=scormName;
+      log("SCORM: "+scormName,"info");
+    }else{
+      html2=DEMO;log("Demo loaded (7 bugs)","info");
+    }
+    thinking("Parsing block structure...");
+    await sleep(150);
+    var info=extractBlocks(html2);
+    log("Found "+info.blocks.length+' blocks in "'+info.title+'"',"ok");
+    var sysLines=[
+      "You are a Rise 360 / SCORM QA analyst. Return ONLY a raw JSON array, no markdown, no fences. Start with [ and end with ].",
+      "Each object must have: blockId, blockType, verdict (PASS|FAIL|WARNING), summary (1 line), detail (2 sentences), checks (array of {label, result, note}).",
+      "IMPORTANT: Blocks are described using HTML comments like <!-- Lesson:X | ISSUES: ... -->. Read the ISSUES field carefully.",
+      "If a block says ISSUES: it has a real problem - verdict must be FAIL or WARNING. Explain the specific issue found.",
+      "If a block has no ISSUES field or says 'No obvious issues' - verdict is PASS. Keep detail brief.",
+      "For course-overview block: summarise the course structure. For scorm-tracking: check if SCORM suspend_data and completion are mentioned.",
+      "For Knowledge Check blocks: correct_answer_defined:false means NO correct answer is set - this is a FAIL.",
+      "Do NOT invent issues. Do NOT pad with generic phrases. Be specific and concise."
+    ];
+    var sys=sysLines.join("\n");
+    var blockList=info.blocks.map(function(b,i){return "BLOCK "+(i+1)+' id="'+b.id+'" type="'+b.type+'":\n'+b.html;}).join("\n---\n");
+    var userLines=[];
+    if(isLive)userLines.push("Live URL: "+srcURL);
+    userLines.push("Title: "+info.title);
+    userLines.push("");
+    userLines.push("QA all "+info.blocks.length+" blocks:");
+    userLines.push("");
+    userLines.push(blockList);
+    var user=userLines.join("\n");
+    thinking("Sending to AI for analysis...");
+    log("Sending to "+cur+"...","think");
+    var raw=await callAPI(sys,user);
+    log("Response received, parsing...","ok");
+    var results;
+    try{
+      var c2=raw.replace(/```\w*\n?/g,"").replace(/```/g,"").trim();
+      // Find first [ to last complete }]
+      var arrStart=c2.indexOf("[");
+      if(arrStart===-1)throw new Error("No JSON array found");
+      var js=c2.slice(arrStart);
+      try{
+        results=JSON.parse(js);
+      }catch(e1){
+        // Truncated - find last complete object ending with }
+        var lc=js.lastIndexOf("}");
+        if(lc!==-1){
+          var fx=js.slice(0,lc+1).replace(/,\s*$/,"");
+          if(!fx.startsWith("["))fx="["+fx;
+          try{
+            results=JSON.parse(fx+"]");
+            log("Response truncated - parsed "+results.length+" complete blocks","warn");
+          }catch(e2){
+            // Try finding last complete object more aggressively
+            var parts=js.split('"},');
+            var good="["+parts.slice(0,-1).join('"},{')+'"}]';
+            try{results=JSON.parse(good);}
+            catch(e3){throw new Error("Could not parse response. Got: "+raw.slice(0,150));}
+          }
+        }else throw new Error("Could not parse response. Got: "+raw.slice(0,150));
+      }
+    }catch(e){throw new Error(e.message);}
+    var pass=0,fail=0,warn=0;
+    results.forEach(function(r){
+      if(r.verdict==="PASS")pass++;
+      else if(r.verdict==="FAIL")fail++;
+      else warn++;
+      log("["+r.blockType+"] "+r.verdict+" - "+r.summary,r.verdict==="PASS"?"ok":r.verdict==="FAIL"?"err":"warn");
+    });
+    log("Done: "+pass+" pass - "+fail+" fail - "+warn+" warn",fail>0?"warn":"ok");
+    window._qa=results;
+    renderReport(results,pass,fail,warn,info,isLive,srcURL);
+  }catch(e){
+    log("Error: "+e.message,"err");
+    var errHtml='<div style="padding:24px;">'
+      +'<div style="background:var(--rlt);border:1.5px solid rgba(192,32,42,0.2);border-radius:10px;padding:16px 18px;">'
+      +'<div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px;">Analysis failed</div>'
+      +'<div style="font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.7;">'+e.message+'</div>'
+      +'</div></div>';
+    document.getElementById("rarea").innerHTML=errHtml;
+    setPill("pill-bad","ERROR");
+  }
+  btn.disabled=false;btn.textContent="Run QA Analysis";
+}
+
+function renderReport(results,pass,fail,warn,info,isLive,srcURL){
+  document.getElementById("rsub").textContent=results.length+" blocks - "+info.title+" - "+new Date().toLocaleTimeString();
+  setPill(fail>0?"pill-bad":warn>0?"pill-run":"pill-ok",fail>0?(fail+" ISSUE"+(fail>1?"S":"")):(warn>0?(warn+" WARN"):"ALL CLEAR"));
+  var eb=document.getElementById("export-bar");if(eb)eb.style.display="flex";
+  var area=document.getElementById("rarea");
+  area.innerHTML="";
+  var sg=document.createElement("div");sg.className="sgrid";
+  sg.innerHTML='<div class="sc sc-t"><div class="n">'+results.length+'</div><div class="l">Checked</div></div>'
+    +'<div class="sc sc-p"><div class="n">'+pass+'</div><div class="l">Passed</div></div>'
+    +'<div class="sc sc-f"><div class="n">'+fail+'</div><div class="l">Failed</div></div>'
+    +'<div class="sc sc-w"><div class="n">'+warn+'</div><div class="l">Warnings</div></div>';
+  area.appendChild(sg);
+  if(isLive&&srcURL){
+    var ub=document.createElement("div");
+    ub.style.cssText="padding:8px 24px;font-size:10px;font-family:var(--mono);color:var(--mut);border-bottom:1px solid var(--bor);";
+    ub.innerHTML='URL: <a href="'+srcURL+'" target="_blank" style="color:var(--hs-dk);">'+srcURL.slice(0,80)+(srcURL.length>80?"...":"")+"</a>";
+    area.appendChild(ub);
+  }
+  var ra=document.createElement("div");ra.className="rarea";
+  results.forEach(function(r){
+    var cls=r.verdict==="PASS"?"rc-p":r.verdict==="FAIL"?"rc-f":"rc-w";
+    var vl=r.verdict==="PASS"?"PASS":r.verdict==="FAIL"?"FAIL":"WARN";
+    var ch=(r.checks||[]).map(function(c){
+      var ci=c.result==="pass"?"ci-p":c.result==="fail"?"ci-f":"ci-w";
+      var cr=c.result==="pass"?"crow-p":c.result==="fail"?"crow-f":"crow-w";
+      var ic2=c.result==="pass"?"OK":c.result==="fail"?"XX":"!!";
+      return'<div class="crow '+cr+'"><span class="'+ci+'">'+ic2+'</span>'
+        +'<span style="color:var(--txt2);min-width:120px;font-weight:500;">'+c.label+'</span>'
+        +'<span style="color:var(--txt);">'+c.note+'</span></div>';
+    }).join("");
+    var card=document.createElement("div");card.className="rc "+cls;
+    card.innerHTML='<div class="rch"><div class="rdot"></div>'
+      +'<span class="rtype">'+(r.blockId||"")+"</span>"
+      +'<span class="rtitle">'+r.blockType+"</span>"
+      +'<span class="rv">'+vl+"</span></div>"
+      +'<div class="rcb"><p>'+r.detail+"</p>"+(ch?'<div class="chk">'+ch+"</div>":"")+"</div>";
+    ra.appendChild(card);
+  });
+  area.appendChild(ra);
+}
+
+function wireButtons(){
+  ["claude","gemini","gpt","copilot"].forEach(function(id){
+    var el=document.getElementById("card-"+id);
+    if(el)el.onclick=function(){selectProvider(id);};
+  });
+  ["url","html","scorm","demo"].forEach(function(id){
+    var el=document.getElementById("tab-"+id);
+    if(el)el.onclick=function(){setMode(id);};
+  });
+  var rb=document.getElementById("run-btn");if(rb)rb.onclick=function(){runQA();};
+  var rs=document.getElementById("reset-btn");if(rs)rs.onclick=function(){resetAll();};
+  var ex=document.getElementById("export-btn");if(ex)ex.onclick=function(){exportCSV();};
+  var cp=document.getElementById("copy-btn");if(cp)cp.onclick=function(){copySummary();};
+  var dz=document.getElementById("dropzone");
+  var sf=document.getElementById("scorm-file");
+  if(dz&&sf){
+    dz.onclick=function(){sf.click();};
+    dz.ondragover=function(e){e.preventDefault();dz.classList.add("drag");};
+    dz.ondragleave=function(){dz.classList.remove("drag");};
+    dz.ondrop=function(e){e.preventDefault();dz.classList.remove("drag");if(e.dataTransfer.files[0])handleScormFile(e.dataTransfer.files[0]);};
+    sf.onchange=function(){if(sf.files[0])handleScormFile(sf.files[0]);};
+  }
+}
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",wireButtons);
+}else{
+  wireButtons();
+}
+setTimeout(wireButtons,50);
+setTimeout(wireButtons,300);
+</script>
+</body>
+</html>
