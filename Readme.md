@@ -1,5 +1,7 @@
 # Rise QA Agent (v3.1) 🔬📐
 
+> **🔗 Live Demo:** Test the prototype instantly at [linuxsunil.github.io/RiseQAtool](https://linuxsunil.github.io/RiseQAtool/)
+
 > **⚠️ Experimental Sandbox:** This tool is an early-stage proof-of-concept exploring "Learning-as-Code" workflows. It is **not** a production-ready compliance auditor. It requires rigorous testing, refinement for complex edge cases, and human validation to guard against LLM hallucinations.
 
 ---
@@ -36,6 +38,21 @@ To be completely transparent, this is an active experiment. Some features are fu
 * **🎨 URL & HTML Modes (UI Prototypes Only):** 
   * *URL Mode:* Intended to analyze via a public Rise share link or Review 360 URL. *Currently non-functional/placeholder due to public CORS proxy limitations.*
   * *HTML Mode:* Intended to parse raw pasted inner HTML source. *Currently non-functional/experimental layout prototype.*
+
+---
+
+## 🚀 Getting Started
+
+Because this is built as a single-file application, there are no complex environments, dependencies, or backend servers to configure.
+
+### Option 1: Run the Deployed Version
+Simply open the live GitHub Pages link: [linuxsunil.github.io/RiseQAtool](https://linuxsunil.github.io/RiseQAtool/)
+
+### Option 2: Run Locally
+1. Clone or download this repository.
+2. Open `index.html` directly in any modern desktop web browser (Chrome, Edge, Firefox, Safari).
+
+Once open, select your AI provider, paste your secure API key, choose **Demo** or **SCORM**, and click **Run QA Analysis**.
 
 ---
 
